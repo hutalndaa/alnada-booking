@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { hasBlockConflict } from "@/lib/blocks";
 import { calculatePrice } from "@/lib/pricing";
 import { isValidName, isValidPhone, isValidEmail, cleanPhoneInput } from "@/lib/validation";
 
@@ -72,6 +73,10 @@ export async function POST(req: NextRequest) {
 
     const startTime = new Date(start_time);
     const endTime = new Date(startTime.getTime() + Number(hours) * 60 * 60 * 1000);
+
+    if (await hasBlockConflict(unit_id, startTime, endTime, unit.cleanup_buffer_minutes)) {
+      return NextResponse.json({ error: "هذا الوقت غير متاح للحجز. جرّب وقت ثاني." }, { status: 409 });
+    }
 
     // 3) محاولة الإدراج - قاعدة البيانات هي اللي تفصل في التعارض
     const { data: booking, error: insertError } = await supabaseAdmin

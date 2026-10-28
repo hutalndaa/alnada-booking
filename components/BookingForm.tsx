@@ -263,6 +263,12 @@ export default function BookingForm({ unitId, hourlyPrice, capacity, bufferMinut
       <p className="text-center text-xs text-stone-500">
         يُحجز الوقت لك مؤقتاً لمدة 15 دقيقة لإتمام الدفع، وبعدها يتأكد الحجز.
       </p>
+      <p className="text-center text-xs text-stone-500">
+        بإتمام الحجز أنت توافق على{" "}
+        <a href="/terms" target="_blank" className="text-emerald-800 underline">الشروط والأحكام</a>،{" "}
+        <a href="/refund" target="_blank" className="text-emerald-800 underline">سياسة الاسترجاع</a>{" "}و{" "}
+        <a href="/privacy" target="_blank" className="text-emerald-800 underline">الخصوصية</a>.
+      </p>
     </form>
   );
 }

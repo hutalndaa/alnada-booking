@@ -16,6 +16,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const navItems = [
     { href: "/admin", label: "الحجوزات" },
+    { href: "/admin/calendar", label: "التقويم" },
     ...(session.role === "owner"
       ? [
           { href: "/admin/units", label: "الأكواخ" },

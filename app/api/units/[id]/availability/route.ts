@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { parseRange } from "@/lib/blocks";
 
 // GET /api/units/[id]/availability?date=YYYY-MM-DD&tz=180
 // يرجّع الفترات المحجوزة (بدون أي بيانات شخصية) ليوم معيّن
@@ -21,5 +22,11 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     .gt("end_time", dayStart.toISOString());
 
   if (error) return NextResponse.json({ error: "تعذر جلب المواعيد" }, { status: 500 });
-  return NextResponse.json({ busy: data ?? [] });
+  const { data: blocks } = await supabaseAdmin.from("blocked_dates").select("block_range").eq("unit_id", params.id);
+  const blockBusy = (blocks ?? [])
+    .map((b) => parseRange(b.block_range as unknown as string))
+    .filter((r): r is { start: Date; end: Date } => !!r && r.start < dayEnd && r.end > dayStart)
+    .map((r) => ({ start_time: r.start.toISOString(), end_time: r.end.toISOString(), buffer_minutes: 0 }));
+
+  return NextResponse.json({ busy: [...(data ?? []), ...blockBusy] });
 }
