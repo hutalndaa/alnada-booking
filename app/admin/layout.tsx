@@ -22,6 +22,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           { href: "/admin/units", label: "الأكواخ" },
           { href: "/admin/pricing", label: "الأسعار والخصومات" },
           { href: "/admin/staff", label: "الموظفين" },
+          { href: "/admin/settings", label: "الإعدادات" },
         ]
       : []),
   ];

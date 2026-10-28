@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
 
   const { data, error } = await supabaseAdmin
     .from("bookings")
-    .select("*, units(name)")
+    .select("*, units(name, location_url)")
     .order("start_time", { ascending: false })
     .limit(200);
 

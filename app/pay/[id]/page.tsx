@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import SiteHeader from "@/components/SiteHeader";
+import { useWhatsAppNumber } from "@/lib/useWhatsAppNumber";
+import { waLink, fmtBookingTime } from "@/lib/whatsapp";
 
 /**
  * صفحة دفع تجريبية (Mock). عند ربط بوابة حقيقية تُستبدل بتوجيه مباشر
@@ -18,6 +20,7 @@ export default function MockPayPage() {
   const [loading, setLoading] = useState(true);
   const [paying, setPaying] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const wa = useWhatsAppNumber();
 
   useEffect(() => {
     fetch(`/api/bookings/${bookingId}`)
@@ -82,6 +85,19 @@ export default function MockPayPage() {
             >
               {paying ? "جارٍ الدفع..." : "ادفع الآن (تجريبي)"}
             </button>
+            {wa && (
+              <a
+                href={waLink(
+                  wa,
+                  `السلام عليكم، أنا ${booking.guest_name}. أنشأت حجز في ${booking.units?.name} بتاريخ ${fmtBookingTime(booking.start_time)} بمبلغ ${booking.total_price} ريال، وبانتظار الدفع. رابط الدفع: ${typeof window !== "undefined" ? window.location.href : ""}`
+                )}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-3 block rounded-xl border border-emerald-800 py-3 text-sm font-bold text-emerald-900 hover:bg-emerald-50"
+              >
+                أرسل تفاصيل الحجز على واتساب
+              </a>
+            )}
           </div>
         )}
       </main>

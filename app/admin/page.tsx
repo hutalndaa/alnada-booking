@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useStaffAuth } from "@/lib/useStaffAuth";
 import { authHeaders } from "@/lib/useStaffAuth";
+import { waLink, fmtBookingTime } from "@/lib/whatsapp";
 
 const STATUS_LABELS: Record<string, string> = {
   pending: "بانتظار الدفع",
@@ -86,6 +87,21 @@ export default function AdminBookingsPage() {
             </span>
           </div>
 
+          {(b.status === "pending" || b.status === "confirmed") && (
+            <a
+              href={waLink(
+                b.guest_phone,
+                b.status === "confirmed"
+                  ? `السلام عليكم ${b.guest_name}، تم تأكيد حجزك في ${b.units?.name} بتاريخ ${fmtBookingTime(b.start_time)}.${b.units?.location_url ? ` الموقع: ${b.units.location_url}` : ""} نتشرف بزيارتك.`
+                  : `السلام عليكم ${b.guest_name}، تم إنشاء حجزك في ${b.units?.name} بتاريخ ${fmtBookingTime(b.start_time)} بمبلغ ${b.total_price} ريال، وهو بانتظار الدفع. رابط الدفع: ${typeof window !== "undefined" ? window.location.origin : ""}/pay/${b.id}`
+              )}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block mt-3 ml-2 text-xs bg-[#25D366] text-white px-3 py-1.5 rounded-lg"
+            >
+              واتساب للعميل
+            </a>
+          )}
           {(b.status === "pending" || b.status === "confirmed") && (
             <div className="flex gap-2 mt-3">
               {b.payment_status !== "paid" && (

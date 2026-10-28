@@ -1,6 +1,7 @@
 import "./globals.css";
 import type { Metadata, Viewport } from "next";
 import { Tajawal } from "next/font/google";
+import WhatsAppFab from "@/components/WhatsAppFab";
 
 const tajawal = Tajawal({
   subsets: ["arabic", "latin"],
@@ -20,6 +21,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="ar" dir="rtl">
       <body className={`${tajawal.className} bg-stone-50 text-stone-900 min-h-screen antialiased`}>
         {children}
+        <WhatsAppFab />
       </body>
     </html>
   );
