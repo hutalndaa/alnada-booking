@@ -4,14 +4,11 @@ import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import SiteHeader from "@/components/SiteHeader";
-import { useWhatsAppNumber } from "@/lib/useWhatsAppNumber";
-import { waLink, fmtBookingTime } from "@/lib/whatsapp";
 
 function Success() {
   const params = useSearchParams();
   const bookingId = params.get("b");
   const [booking, setBooking] = useState<any>(null);
-  const wa = useWhatsAppNumber();
 
   useEffect(() => {
     if (!bookingId) return;
@@ -41,7 +38,7 @@ function Success() {
             <div>{fmt(booking.start_time)}</div>
           </div>
         )}
-        <p className="text-stone-500 text-sm leading-7 mt-3">شكراً لك! سيتم التواصل معك قبل الموعد على رقم جوالك.</p>
+        <p className="text-stone-500 text-sm leading-7 mt-3">شكراً لك! احتفظ برقم الحجز، وسيصلك تأكيد على واتساب على رقم جوالك.</p>
         {booking?.units?.location_url && (
           <a
             href={booking.units.location_url}
@@ -50,19 +47,6 @@ function Success() {
             className="mt-4 flex items-center justify-center gap-2 rounded-xl bg-amber-400 px-4 py-3 font-bold text-emerald-950 hover:bg-amber-300"
           >
             <span aria-hidden>📍</span> افتح الموقع في خرائط قوقل
-          </a>
-        )}
-        {wa && booking && (
-          <a
-            href={waLink(
-              wa,
-              `السلام عليكم، أنا ${booking.guest_name}. تم تأكيد حجزي رقم ${booking.booking_no} في ${booking.units?.name} بتاريخ ${fmtBookingTime(booking.start_time)}.`
-            )}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-3 block rounded-xl border border-emerald-800 px-4 py-3 text-sm font-bold text-emerald-900 hover:bg-emerald-50"
-          >
-            تواصل معنا على واتساب
           </a>
         )}
         <Link href="/" className="inline-block mt-5 rounded-xl bg-emerald-800 px-6 py-2.5 text-sm font-bold text-white">

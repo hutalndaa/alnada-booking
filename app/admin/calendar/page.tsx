@@ -2,15 +2,16 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { authHeaders, useStaffAuth } from "@/lib/useStaffAuth";
+import { waLink, bookingNotice } from "@/lib/whatsapp";
 import { cleanNameInput, cleanPhoneInput, isValidName, isValidPhone } from "@/lib/validation";
 
 const TZ = "+03:00"; // توقيت الرياض
 const HOUR_PX = 56;
 const LABEL_PX = 96;
 
-interface CUnit { id: string; name: string; status: string; base_hourly_price: string; capacity: number }
+interface CUnit { id: string; name: string; status: string; base_hourly_price: string; capacity: number; location_url?: string | null }
 interface CBooking {
-  id: string; unit_id: string; guest_name: string; guest_phone: string; num_guests: number;
+  id: string; booking_no?: number; unit_id: string; guest_name: string; guest_phone: string; num_guests: number;
   start_time: string; end_time: string; buffer_minutes: number; status: string; payment_status: string;
   payment_method: string | null; total_price: string; notes: string | null;
 }
@@ -174,7 +175,10 @@ export default function CalendarPage() {
         return (
           <div className="bg-white border rounded-xl p-4 space-y-2">
             <div className="flex justify-between">
-              <div className="font-bold">{b.guest_name} · <span dir="ltr">{b.guest_phone}</span></div>
+              <div className="font-bold">
+                <span className="text-xs font-normal text-neutral-400">رقم الحجز {b.booking_no} · </span>
+                {b.guest_name} · <span dir="ltr">{b.guest_phone}</span>
+              </div>
               <button onClick={() => setSelected(null)} className="text-neutral-400 text-sm">إغلاق ✕</button>
             </div>
             <div className="text-sm text-neutral-600">{unitName(b.unit_id)} · من {fmtTime(b.start_time)} إلى {fmtTime(b.end_time)} · {b.num_guests} أشخاص</div>
@@ -184,7 +188,16 @@ export default function CalendarPage() {
               {b.payment_method ? ` · ${METHOD[b.payment_method] ?? b.payment_method}` : ""}
             </div>
             {b.notes && <div className="text-sm text-neutral-500">ملاحظة: {b.notes}</div>}
-            <div className="flex gap-2 pt-1">
+            <div className="flex flex-wrap gap-2 pt-1">
+              <a
+                target="_blank" rel="noopener noreferrer"
+                href={waLink(b.guest_phone, bookingNotice(
+                  { ...b, booking_no: b.booking_no, units: { name: unitName(b.unit_id), location_url: units.find((u) => u.id === b.unit_id)?.location_url } },
+                  b.status === "confirmed" ? "confirmed" : "pending",
+                  typeof window !== "undefined" ? window.location.origin : ""
+                ))}
+                className="text-xs bg-[#25D366] text-white px-3 py-1.5 rounded-lg"
+              >واتساب للعميل</a>
               {b.payment_status !== "paid" && (
                 <button disabled={busy} onClick={async () => { if (await call(`/api/admin/bookings/${b.id}/mark-paid`, "POST")) setSelected(null); }}
                   className="text-xs bg-green-600 text-white px-3 py-1.5 rounded-lg disabled:opacity-50">تأكيد دفع يدوي</button>

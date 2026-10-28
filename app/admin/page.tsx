@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useStaffAuth } from "@/lib/useStaffAuth";
 import { authHeaders } from "@/lib/useStaffAuth";
-import { waLink, fmtBookingTime } from "@/lib/whatsapp";
+import { waLink, bookingNotice } from "@/lib/whatsapp";
 
 const STATUS_LABELS: Record<string, string> = {
   pending: "بانتظار الدفع",
@@ -88,9 +88,13 @@ export default function AdminBookingsPage() {
   }
 
   const needle = q.trim();
+  const digits = needle.replace(/\D/g, "").replace(/^(00)?966/, "0").replace(/^5/, "05");
   const shown = needle
-    ? bookings.filter((b) =>
-        [b.booking_no, b.guest_name, b.guest_phone].some((v) => String(v ?? "").includes(needle))
+    ? bookings.filter(
+        (b) =>
+          String(b.booking_no ?? "") === needle.replace(/^#/, "") ||
+          String(b.guest_name ?? "").includes(needle) ||
+          (digits.length >= 3 && String(b.guest_phone ?? "").includes(digits))
       )
     : bookings;
 
@@ -110,7 +114,7 @@ export default function AdminBookingsPage() {
       <input
         value={q}
         onChange={(e) => setQ(e.target.value)}
-        placeholder="ابحث برقم الحجز أو الاسم أو الجوال"
+        placeholder="ابحث برقم الجوال أو رقم الحجز أو الاسم"
         className="w-full rounded-xl border bg-white px-4 py-2.5 text-sm outline-none focus:border-emerald-700"
       />
       {!bookings.length && <p className="text-neutral-500">لا توجد حجوزات بعد.</p>}
@@ -151,9 +155,7 @@ export default function AdminBookingsPage() {
             <a
               href={waLink(
                 b.guest_phone,
-                b.status === "confirmed"
-                  ? `السلام عليكم ${b.guest_name}، تم تأكيد حجزك رقم ${b.booking_no} في ${b.units?.name} بتاريخ ${fmtBookingTime(b.start_time)}.${b.units?.location_url ? ` الموقع: ${b.units.location_url}` : ""} نتشرف بزيارتك.`
-                  : `السلام عليكم ${b.guest_name}، تم إنشاء حجزك رقم ${b.booking_no} في ${b.units?.name} بتاريخ ${fmtBookingTime(b.start_time)} بمبلغ ${b.total_price} ريال، وهو بانتظار الدفع. رابط الدفع: ${typeof window !== "undefined" ? window.location.origin : ""}/pay/${b.id}`
+                bookingNotice(b, b.status === "confirmed" ? "confirmed" : "pending", typeof window !== "undefined" ? window.location.origin : "")
               )}
               target="_blank"
               rel="noopener noreferrer"

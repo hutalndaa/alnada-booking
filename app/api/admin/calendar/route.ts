@@ -18,10 +18,10 @@ export async function GET(req: NextRequest) {
   const dayEnd = new Date(dayStart.getTime() + 24 * 3600 * 1000);
 
   const [units, bookings, blocks] = await Promise.all([
-    supabaseAdmin.from("units").select("id, name, status, base_hourly_price, capacity").order("created_at"),
+    supabaseAdmin.from("units").select("id, name, status, base_hourly_price, capacity, location_url").order("created_at"),
     supabaseAdmin
       .from("bookings")
-      .select("id, unit_id, guest_name, guest_phone, num_guests, start_time, end_time, buffer_minutes, status, payment_status, payment_method, total_price, notes")
+      .select("id, booking_no, unit_id, guest_name, guest_phone, num_guests, start_time, end_time, buffer_minutes, status, payment_status, payment_method, total_price, notes")
       .in("status", ["pending", "confirmed"])
       .lt("start_time", dayEnd.toISOString())
       .gt("end_time", new Date(dayStart.getTime() - 3600000).toISOString()),
