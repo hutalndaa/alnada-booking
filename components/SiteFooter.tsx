@@ -11,6 +11,9 @@ export default function SiteFooter() {
           <Link href="/privacy" className="hover:text-emerald-800 hover:underline">سياسة الخصوصية</Link>
           <Link href="/refund" className="hover:text-emerald-800 hover:underline">الاسترجاع والإلغاء</Link>
         </nav>
+        <div className="mt-4 text-xs text-stone-400">
+          © {new Date().getFullYear()} أكواخ الندى. جميع الحقوق محفوظة.
+        </div>
       </div>
     </footer>
   );
