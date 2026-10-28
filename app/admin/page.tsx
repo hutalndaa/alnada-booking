@@ -26,6 +26,7 @@ export default function AdminBookingsPage() {
   const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [q, setQ] = useState("");
 
   async function load() {
     if (!session) return;
@@ -74,6 +75,25 @@ export default function AdminBookingsPage() {
     load();
   }
 
+  async function markRefunded(id: string) {
+    if (!session || !confirm("تأكد إنك استرجعت المبلغ للعميل فعلياً؟")) return;
+    setBusyId(id);
+    await fetch(`/api/admin/bookings/${id}`, {
+      method: "PATCH",
+      headers: authHeaders(session.token),
+      body: JSON.stringify({ payment_status: "refunded" }),
+    });
+    setBusyId(null);
+    load();
+  }
+
+  const needle = q.trim();
+  const shown = needle
+    ? bookings.filter((b) =>
+        [b.booking_no, b.guest_name, b.guest_phone].some((v) => String(v ?? "").includes(needle))
+      )
+    : bookings;
+
   if (loading) return <p className="text-neutral-500">جارٍ التحميل...</p>;
 
   return (
@@ -87,11 +107,19 @@ export default function AdminBookingsPage() {
           </>
         )}
       </div>
+      <input
+        value={q}
+        onChange={(e) => setQ(e.target.value)}
+        placeholder="ابحث برقم الحجز أو الاسم أو الجوال"
+        className="w-full rounded-xl border bg-white px-4 py-2.5 text-sm outline-none focus:border-emerald-700"
+      />
       {!bookings.length && <p className="text-neutral-500">لا توجد حجوزات بعد.</p>}
-      {bookings.map((b) => (
+      {!!bookings.length && !shown.length && <p className="text-neutral-500">ما فيه نتيجة للبحث.</p>}
+      {shown.map((b) => (
         <div key={b.id} className="bg-white border rounded-xl p-4">
           <div className="flex justify-between items-start">
             <div>
+              <div className="text-xs text-neutral-400">رقم الحجز <b className="text-neutral-700">{b.booking_no}</b></div>
               <div className="font-medium">{b.guest_name} · {b.guest_phone}</div>
               <div className="text-sm text-neutral-500">{b.units?.name}</div>
               <div className="text-sm text-neutral-500">
@@ -107,13 +135,25 @@ export default function AdminBookingsPage() {
             </span>
           </div>
 
+          {["expired", "cancelled"].includes(b.status) && b.payment_status === "paid" && (
+            <div className="mt-3 rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-700">
+              ⚠️ دفع متأخر: العميل دفع {b.paid_amount} ريال والوقت انحجز لغيره. لازم يُسترجع المبلغ كاملاً.
+              <button
+                disabled={busyId === b.id}
+                onClick={() => markRefunded(b.id)}
+                className="mr-2 text-xs bg-red-600 text-white px-3 py-1.5 rounded-lg disabled:opacity-50"
+              >
+                تم الاسترجاع
+              </button>
+            </div>
+          )}
           {(b.status === "pending" || b.status === "confirmed") && (
             <a
               href={waLink(
                 b.guest_phone,
                 b.status === "confirmed"
-                  ? `السلام عليكم ${b.guest_name}، تم تأكيد حجزك في ${b.units?.name} بتاريخ ${fmtBookingTime(b.start_time)}.${b.units?.location_url ? ` الموقع: ${b.units.location_url}` : ""} نتشرف بزيارتك.`
-                  : `السلام عليكم ${b.guest_name}، تم إنشاء حجزك في ${b.units?.name} بتاريخ ${fmtBookingTime(b.start_time)} بمبلغ ${b.total_price} ريال، وهو بانتظار الدفع. رابط الدفع: ${typeof window !== "undefined" ? window.location.origin : ""}/pay/${b.id}`
+                  ? `السلام عليكم ${b.guest_name}، تم تأكيد حجزك رقم ${b.booking_no} في ${b.units?.name} بتاريخ ${fmtBookingTime(b.start_time)}.${b.units?.location_url ? ` الموقع: ${b.units.location_url}` : ""} نتشرف بزيارتك.`
+                  : `السلام عليكم ${b.guest_name}، تم إنشاء حجزك رقم ${b.booking_no} في ${b.units?.name} بتاريخ ${fmtBookingTime(b.start_time)} بمبلغ ${b.total_price} ريال، وهو بانتظار الدفع. رابط الدفع: ${typeof window !== "undefined" ? window.location.origin : ""}/pay/${b.id}`
               )}
               target="_blank"
               rel="noopener noreferrer"

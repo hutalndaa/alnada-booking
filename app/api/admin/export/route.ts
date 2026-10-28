@@ -41,9 +41,9 @@ export async function GET(req: NextRequest) {
   let body: string;
   if (type === "bookings") {
     body = csv(
-      ["الكوخ", "اسم العميل", "الجوال", "البريد", "عدد الأشخاص", "البداية", "النهاية", "الساعات", "الحالة", "حالة الدفع", "طريقة الدفع", "المبلغ (ريال)", "الخصم %", "ملاحظات", "تاريخ الإنشاء"],
+      ["رقم الحجز", "الكوخ", "اسم العميل", "الجوال", "البريد", "عدد الأشخاص", "البداية", "النهاية", "الساعات", "الحالة", "حالة الدفع", "طريقة الدفع", "المبلغ (ريال)", "الخصم %", "ملاحظات", "تاريخ الإنشاء"],
       bookings.map((b: any) => [
-        cell(b.units?.name), cell(b.guest_name), phoneCell(b.guest_phone), cell(b.guest_email), cell(b.num_guests),
+        cell(b.booking_no), cell(b.units?.name), cell(b.guest_name), phoneCell(b.guest_phone), cell(b.guest_email), cell(b.num_guests),
         cell(when(b.start_time)), cell(when(b.end_time)),
         cell(Math.round((new Date(b.end_time).getTime() - new Date(b.start_time).getTime()) / 3600000)),
         cell(STATUS[b.status] ?? b.status), cell(PAY[b.payment_status] ?? b.payment_status),

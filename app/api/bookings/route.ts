@@ -136,7 +136,7 @@ export async function POST(req: NextRequest) {
     }
 
     await notifyOwner(
-      `🔔 حجز جديد بانتظار الدفع\n${unit.name}\nالعميل: ${booking.guest_name} - ${booking.guest_phone}\nالموعد: ${fmtWhen(booking.start_time)}\nالمدة: ${describeDuration(booking.start_time, booking.end_time)}\nالمبلغ: ${booking.total_price} ريال`
+      `🔔 حجز جديد بانتظار الدفع\nرقم الحجز: ${booking.booking_no}\n${unit.name}\nالعميل: ${booking.guest_name} - ${booking.guest_phone}\nالموعد: ${fmtWhen(booking.start_time)}\nالمدة: ${describeDuration(booking.start_time, booking.end_time)}\nالمبلغ: ${booking.total_price} ريال`
     );
 
     // 4) الخطوة التالية: توجيه الضيف لبوابة الدفع مع ربط booking.id

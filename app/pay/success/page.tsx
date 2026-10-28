@@ -30,6 +30,12 @@ function Success() {
         <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-2xl text-emerald-800">✓</div>
         <h1 className="font-extrabold text-xl text-emerald-950 mb-2">تم تأكيد حجزك</h1>
         {booking && (
+          <div className="mt-3 rounded-xl bg-emerald-50 p-3">
+            <div className="text-xs text-emerald-800">رقم الحجز</div>
+            <div className="text-3xl font-extrabold tracking-wide text-emerald-950" dir="ltr">{booking.booking_no}</div>
+          </div>
+        )}
+        {booking && (
           <div className="mt-3 rounded-xl bg-stone-50 p-4 text-sm text-stone-600 space-y-1">
             <div className="font-bold text-emerald-900">{booking.units?.name}</div>
             <div>{fmt(booking.start_time)}</div>
@@ -50,7 +56,7 @@ function Success() {
           <a
             href={waLink(
               wa,
-              `السلام عليكم، أنا ${booking.guest_name}. تم تأكيد حجزي في ${booking.units?.name} بتاريخ ${fmtBookingTime(booking.start_time)}.`
+              `السلام عليكم، أنا ${booking.guest_name}. تم تأكيد حجزي رقم ${booking.booking_no} في ${booking.units?.name} بتاريخ ${fmtBookingTime(booking.start_time)}.`
             )}
             target="_blank"
             rel="noopener noreferrer"

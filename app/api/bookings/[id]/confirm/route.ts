@@ -20,54 +20,80 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     return NextResponse.json({ error: "حالة دفع غير صالحة" }, { status: 400 });
   }
 
-  // نتأكد إن الحجز لسه صالح (لم تنتهِ مهلته) قبل ما نأكده
   const { data: existing } = await supabaseAdmin
     .from("bookings")
-    .select("id, status, hold_expires_at, total_price")
+    .select("id, booking_no, status, payment_status, hold_expires_at, total_price, notes")
     .eq("id", id)
     .single();
 
   if (!existing) {
     return NextResponse.json({ error: "الحجز غير موجود" }, { status: 404 });
   }
-  if (existing.status === "expired" || existing.status === "cancelled") {
-    return NextResponse.json(
-      { error: "انتهت مهلة هذا الحجز قبل إتمام الدفع، الرجاء إعادة المحاولة" },
-      { status: 410 }
-    );
+
+  // تكرار نفس الإشعار (البوابات ترسل Webhook أكثر من مرة): لا نغيّر شيء
+  if (existing.status === "confirmed" || existing.status === "completed") {
+    return NextResponse.json({ booking: existing, already: true });
   }
 
-  if (existing.status === "pending" && new Date(existing.hold_expires_at).getTime() < Date.now()) {
-    return NextResponse.json(
-      { error: "انتهت مهلة هذا الحجز قبل إتمام الدفع، الرجاء إعادة المحاولة" },
-      { status: 410 }
-    );
+  const paidAmount = amount ?? existing.total_price;
+  const payFields = {
+    payment_status: "paid",
+    paid_amount: paidAmount,
+    payment_method: payment_method ?? null,
+    payment_ref: payment_ref ?? null,
+    paid_at: new Date().toISOString(),
+  };
+  const holdElapsed =
+    existing.status === "pending" && new Date(existing.hold_expires_at).getTime() < Date.now();
+  const isLate = existing.status === "expired" || holdElapsed;
+
+  // نحاول التأكيد. لو الحجز انتهى (expired) نحاول "إحياءه": قيد قاعدة البيانات (EXCLUDE)
+  // يرفض التأكيد تلقائياً إذا الوقت انحجز لعميل آخر (23P01)، فلا يصير حجزان متعارضان أبداً.
+  if (existing.status === "pending" || existing.status === "expired") {
+    const { data: updated, error } = await supabaseAdmin
+      .from("bookings")
+      .update({
+        status: "confirmed",
+        ...payFields,
+        ...(isLate ? { notes: [existing.notes, "دفع متأخر بعد انتهاء المهلة، الوقت كان متاحاً فتم التأكيد"].filter(Boolean).join(" | ") } : {}),
+      })
+      .eq("id", id)
+      .in("status", ["pending", "expired"])
+      .select("*, units(name)")
+      .single();
+
+    if (!error && updated) {
+      await notifyOwner(
+        `${isLate ? "⏱️ تم تأكيد حجز بعد دفع متأخر" : "✅ تم تأكيد حجز بعد الدفع"}\nرقم الحجز: ${updated.booking_no}\n${(updated as any).units?.name ?? ""}\nالعميل: ${updated.guest_name} - ${updated.guest_phone}\nالموعد: ${fmtWhen(updated.start_time)}\nالمدة: ${describeDuration(updated.start_time, updated.end_time)}\nالمبلغ: ${updated.total_price} ريال`
+      );
+      return NextResponse.json({ booking: updated, late: isLate });
+    }
+
+    if (error && error.code !== "23P01") {
+      console.error(error);
+      return NextResponse.json({ error: "تعذر تأكيد الحجز" }, { status: 500 });
+    }
   }
 
-  const { data: updated, error } = await supabaseAdmin
+  // وصلنا هنا = الدفع وصل لكن الوقت انحجز لغيره (تعارض) أو الحجز ملغى.
+  // لا نؤكد حجزاً متعارضاً. نسجّل أن المبلغ مدفوع ومطلوب استرجاعه كاملاً ونبلّغ المالك.
+  await supabaseAdmin
     .from("bookings")
     .update({
-      status: "confirmed",
-      payment_status: "paid",
-      paid_amount: amount ?? existing.total_price,
-      payment_method: payment_method ?? null,
-      payment_ref: payment_ref ?? null,
-      paid_at: new Date().toISOString(),
+      ...payFields,
+      notes: [existing.notes, "⚠️ دفع وصل بعد انتهاء المهلة والوقت محجوز لغيره: يلزم استرجاع المبلغ كاملاً"].filter(Boolean).join(" | "),
     })
     .eq("id", id)
-    .select("*, units(name)")
-    .single();
+    .in("status", ["expired", "cancelled"]);
 
-  if (error) {
-    console.error(error);
-    return NextResponse.json({ error: "تعذر تأكيد الحجز" }, { status: 500 });
-  }
-
-  if (existing.status === "pending") {
-    await notifyOwner(
-      `✅ تم تأكيد حجز بعد الدفع\n${(updated as any).units?.name ?? ""}\nالعميل: ${updated.guest_name} - ${updated.guest_phone}\nالموعد: ${fmtWhen(updated.start_time)}\nالمدة: ${describeDuration(updated.start_time, updated.end_time)}\nالمبلغ: ${updated.total_price} ريال`
-    );
-  }
-
-  return NextResponse.json({ booking: updated });
+  await notifyOwner(
+    `⚠️ دفع متأخر يحتاج استرجاع\nرقم الحجز: ${existing.booking_no}\nالمبلغ المدفوع: ${paidAmount} ريال\nالمرجع: ${payment_ref ?? "-"}\nالوقت انحجز لعميل آخر، لازم يُسترجع المبلغ كاملاً.`
+  );
+  return NextResponse.json(
+    {
+      error: `وصل دفعك بعد انتهاء المهلة وتم حجز هذا الوقت لعميل آخر. سيُسترجع المبلغ كاملاً. رقم حجزك ${existing.booking_no}.`,
+      refund_due: true,
+    },
+    { status: 409 }
+  );
 }
