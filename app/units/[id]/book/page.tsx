@@ -5,6 +5,7 @@ import { Unit } from "@/lib/types";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import BookingForm from "@/components/BookingForm";
+import Gallery from "@/components/Gallery";
 
 export const revalidate = 0;
 
@@ -37,7 +38,7 @@ export default async function BookUnitPage({ params }: { params: { id: string } 
 
         <div className="mt-4 grid gap-8 lg:grid-cols-5">
           <section className="lg:col-span-2 lg:sticky lg:top-20 self-start">
-            <div className="h-48 rounded-2xl bg-gradient-to-br from-emerald-700 to-emerald-900" />
+            <Gallery />
             <h1 className="mt-5 text-2xl font-extrabold text-emerald-950">{u.name}</h1>
             <p className="mt-2 leading-8 text-stone-600">
               {u.description || "كوخ مريح ومجهّز لقضاء وقت ممتع."}

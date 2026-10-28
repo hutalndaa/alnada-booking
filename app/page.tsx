@@ -3,6 +3,7 @@ import { supabase } from "@/lib/supabase";
 import { Unit } from "@/lib/types";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
+import { CABIN_PHOTOS } from "@/lib/photos";
 
 export const revalidate = 0;
 
@@ -54,8 +55,15 @@ export default async function HomePage() {
                 key={unit.id}
                 className="group flex flex-col rounded-2xl bg-white border border-stone-200 overflow-hidden shadow-sm hover:shadow-lg transition"
               >
-                <div className="h-36 bg-gradient-to-br from-emerald-700 to-emerald-900 flex items-end p-4">
-                  <span className="rounded-full bg-white/15 backdrop-blur px-3 py-1 text-xs text-white">
+                <div className="relative h-48 bg-emerald-900 overflow-hidden">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={CABIN_PHOTOS[i % CABIN_PHOTOS.length].src}
+                    alt={CABIN_PHOTOS[i % CABIN_PHOTOS.length].alt}
+                    loading="lazy"
+                    className="h-full w-full object-cover group-hover:scale-105 transition duration-500"
+                  />
+                  <span className="absolute bottom-3 right-3 rounded-full bg-black/50 backdrop-blur px-3 py-1 text-xs text-white">
                     كوخ رقم {i + 1}
                   </span>
                 </div>
