@@ -39,6 +39,18 @@ export default function AdminBookingsPage() {
     load();
   }, [session]);
 
+  async function download(type: "customers" | "bookings") {
+    if (!session) return;
+    const res = await fetch(`/api/admin/export?type=${type}`, { headers: authHeaders(session.token) });
+    if (!res.ok) { alert("تعذر تنزيل الملف"); return; }
+    const url = URL.createObjectURL(await res.blob());
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `alnada-${type}-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   async function markPaid(id: string) {
     if (!session) return;
     setBusyId(id);
@@ -66,7 +78,15 @@ export default function AdminBookingsPage() {
 
   return (
     <div className="space-y-3 max-w-3xl mx-auto">
-      <h1 className="text-lg font-bold">الحجوزات</h1>
+      <div className="flex flex-wrap items-center gap-2">
+        <h1 className="text-lg font-bold ml-auto">الحجوزات</h1>
+        {session?.role === "owner" && (
+          <>
+            <button onClick={() => download("customers")} className="text-xs bg-white border px-3 py-1.5 rounded-lg">تنزيل العملاء (Excel)</button>
+            <button onClick={() => download("bookings")} className="text-xs bg-white border px-3 py-1.5 rounded-lg">تنزيل كل الحجوزات (Excel)</button>
+          </>
+        )}
+      </div>
       {!bookings.length && <p className="text-neutral-500">لا توجد حجوزات بعد.</p>}
       {bookings.map((b) => (
         <div key={b.id} className="bg-white border rounded-xl p-4">
