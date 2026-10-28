@@ -7,6 +7,7 @@ export interface Unit {
   cleanup_buffer_minutes: number;
   hold_minutes: number;
   amenities: string[];
+  location_url: string | null;
   status: "active" | "maintenance" | "inactive";
 }
 

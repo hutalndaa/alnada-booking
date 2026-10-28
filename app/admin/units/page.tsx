@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useStaffAuth, authHeaders } from "@/lib/useStaffAuth";
 
 const empty = {
-  name: "", description: "", amenitiesText: "", capacity: 2, base_hourly_price: 35,
+  name: "", description: "", amenitiesText: "", location_url: "", capacity: 2, base_hourly_price: 35,
   cleanup_buffer_minutes: 15, hold_minutes: 15, status: "active",
 };
 
@@ -32,6 +32,7 @@ export default function AdminUnitsPage() {
     const { amenitiesText, ...rest } = form;
     const payload = {
       ...rest,
+      location_url: String(rest.location_url ?? "").trim() || null,
       amenities: String(amenitiesText ?? "").split(/[,،\n]/).map((x: string) => x.trim()).filter(Boolean),
     };
     if (editingId) {
@@ -50,7 +51,7 @@ export default function AdminUnitsPage() {
 
   function startEdit(unit: any) {
     setForm({
-      name: unit.name, description: unit.description ?? "", amenitiesText: (unit.amenities ?? []).join("، "), capacity: unit.capacity,
+      name: unit.name, description: unit.description ?? "", amenitiesText: (unit.amenities ?? []).join("، "), location_url: unit.location_url ?? "", capacity: unit.capacity,
       base_hourly_price: unit.base_hourly_price, cleanup_buffer_minutes: unit.cleanup_buffer_minutes,
       hold_minutes: unit.hold_minutes, status: unit.status,
     });
@@ -72,6 +73,11 @@ export default function AdminUnitsPage() {
             <label className="text-xs text-neutral-500">المميزات (افصل بينها بفاصلة)</label>
             <input placeholder="مكيف، واي فاي، مواقف" className="w-full border rounded-lg p-2"
               value={form.amenitiesText} onChange={(e) => setForm({ ...form, amenitiesText: e.target.value })} />
+          </div>
+          <div>
+            <label className="text-xs text-neutral-500">رابط الموقع على خرائط قوقل</label>
+            <input type="url" dir="ltr" placeholder="https://maps.app.goo.gl/..." className="w-full border rounded-lg p-2"
+              value={form.location_url} onChange={(e) => setForm({ ...form, location_url: e.target.value })} />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>

@@ -52,6 +52,16 @@ export default async function BookUnitPage({ params }: { params: { id: string } 
                 <dd className="font-bold text-emerald-900">{Number(u.base_hourly_price)} ريال</dd>
               </div>
             </dl>
+            {u.location_url && (
+              <a
+                href={u.location_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-4 flex items-center justify-center gap-2 rounded-xl border border-emerald-800 px-4 py-3 text-sm font-bold text-emerald-900 hover:bg-emerald-50 transition"
+              >
+                <span aria-hidden>📍</span> افتح الموقع في خرائط قوقل
+              </a>
+            )}
             {u.amenities?.length > 0 && (
               <>
                 <h2 className="mt-5 font-bold text-emerald-950">المميزات</h2>

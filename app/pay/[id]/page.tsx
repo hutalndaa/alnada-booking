@@ -42,7 +42,7 @@ export default function MockPayPage() {
     const data = await res.json();
     setPaying(false);
     if (!res.ok) { setError(data.error ?? "تعذر إتمام الدفع"); return; }
-    router.push("/pay/success");
+    router.push(`/pay/success?b=${bookingId}`);
   }
 
   const fmt = (s: string) =>

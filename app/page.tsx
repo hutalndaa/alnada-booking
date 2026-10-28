@@ -87,6 +87,16 @@ export default async function HomePage() {
                       احجز الآن
                     </Link>
                   </div>
+                  {unit.location_url && (
+                    <a
+                      href={unit.location_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-3 text-sm font-medium text-emerald-800 hover:underline"
+                    >
+                      📍 الموقع على الخريطة
+                    </a>
+                  )}
                 </div>
               </article>
             ))}
