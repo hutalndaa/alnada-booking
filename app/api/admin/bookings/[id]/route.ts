@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireStaff } from "@/lib/authGuard";
-import { supabaseAdmin } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 // PATCH /api/admin/bookings/[id] - تحديث الحالة (تأكيد يدوي / إلغاء)
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { calculatePrice } from "@/lib/pricing";
+import { isValidName, isValidPhone, isValidEmail, cleanPhoneInput } from "@/lib/validation";
 
 /**
  * POST /api/bookings
@@ -19,6 +20,24 @@ export async function POST(req: NextRequest) {
 
     if (!unit_id || !guest_name || !guest_phone || !start_time || !hours) {
       return NextResponse.json({ error: "بيانات ناقصة" }, { status: 400 });
+    }
+
+    const phone = cleanPhoneInput(String(guest_phone));
+    if (!isValidName(String(guest_name))) {
+      return NextResponse.json({ error: "الاسم يجب أن يحتوي على حروف ومسافات فقط" }, { status: 400 });
+    }
+    if (!isValidPhone(phone)) {
+      return NextResponse.json({ error: "رقم الجوال يجب أن يكون 10 أرقام ويبدأ بـ 05" }, { status: 400 });
+    }
+    if (guest_email && !isValidEmail(String(guest_email))) {
+      return NextResponse.json({ error: "البريد الإلكتروني غير صحيح" }, { status: 400 });
+    }
+    const hoursNum = Number(hours);
+    if (!Number.isInteger(hoursNum) || hoursNum < 1 || hoursNum > 24) {
+      return NextResponse.json({ error: "عدد الساعات غير صحيح" }, { status: 400 });
+    }
+    if (isNaN(new Date(start_time).getTime()) || new Date(start_time).getTime() < Date.now() - 5 * 60 * 1000) {
+      return NextResponse.json({ error: "وقت البداية يجب أن يكون في المستقبل" }, { status: 400 });
     }
 
     // 1) جلب بيانات الوحدة (السعر + إعدادات الفاصل والمهلة)
@@ -47,6 +66,10 @@ export async function POST(req: NextRequest) {
       (tiers ?? []).map((t) => ({ minHours: t.min_hours, discountPercent: t.discount_percent }))
     );
 
+    if (Number(num_guests ?? 1) > unit.capacity) {
+      return NextResponse.json({ error: `الكوخ يتسع لـ ${unit.capacity} أشخاص كحد أقصى` }, { status: 400 });
+    }
+
     const startTime = new Date(start_time);
     const endTime = new Date(startTime.getTime() + Number(hours) * 60 * 60 * 1000);
 
@@ -55,8 +78,8 @@ export async function POST(req: NextRequest) {
       .from("bookings")
       .insert({
         unit_id,
-        guest_name,
-        guest_phone,
+        guest_name: String(guest_name).trim().replace(/\s+/g, " "),
+        guest_phone: phone,
         guest_email: guest_email ?? null,
         num_guests: num_guests ?? 1,
         start_time: startTime.toISOString(),

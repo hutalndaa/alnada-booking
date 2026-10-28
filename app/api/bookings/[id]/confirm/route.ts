@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 /**
  * POST /api/bookings/[id]/confirm
@@ -30,6 +30,13 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     return NextResponse.json({ error: "الحجز غير موجود" }, { status: 404 });
   }
   if (existing.status === "expired" || existing.status === "cancelled") {
+    return NextResponse.json(
+      { error: "انتهت مهلة هذا الحجز قبل إتمام الدفع، الرجاء إعادة المحاولة" },
+      { status: 410 }
+    );
+  }
+
+  if (existing.status === "pending" && new Date(existing.hold_expires_at).getTime() < Date.now()) {
     return NextResponse.json(
       { error: "انتهت مهلة هذا الحجز قبل إتمام الدفع، الرجاء إعادة المحاولة" },
       { status: 410 }

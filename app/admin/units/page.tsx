@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useStaffAuth, authHeaders } from "@/lib/useStaffAuth";
 
 const empty = {
-  name: "", description: "", capacity: 2, base_hourly_price: 35,
+  name: "", description: "", amenitiesText: "", capacity: 2, base_hourly_price: 35,
   cleanup_buffer_minutes: 15, hold_minutes: 15, status: "active",
 };
 
@@ -29,13 +29,18 @@ export default function AdminUnitsPage() {
     e.preventDefault();
     if (!session) return;
 
+    const { amenitiesText, ...rest } = form;
+    const payload = {
+      ...rest,
+      amenities: String(amenitiesText ?? "").split(/[,،\n]/).map((x: string) => x.trim()).filter(Boolean),
+    };
     if (editingId) {
       await fetch(`/api/admin/units/${editingId}`, {
-        method: "PATCH", headers: authHeaders(session.token), body: JSON.stringify(form),
+        method: "PATCH", headers: authHeaders(session.token), body: JSON.stringify(payload),
       });
     } else {
       await fetch("/api/admin/units", {
-        method: "POST", headers: authHeaders(session.token), body: JSON.stringify(form),
+        method: "POST", headers: authHeaders(session.token), body: JSON.stringify(payload),
       });
     }
     setForm(empty);
@@ -45,7 +50,7 @@ export default function AdminUnitsPage() {
 
   function startEdit(unit: any) {
     setForm({
-      name: unit.name, description: unit.description ?? "", capacity: unit.capacity,
+      name: unit.name, description: unit.description ?? "", amenitiesText: (unit.amenities ?? []).join("، "), capacity: unit.capacity,
       base_hourly_price: unit.base_hourly_price, cleanup_buffer_minutes: unit.cleanup_buffer_minutes,
       hold_minutes: unit.hold_minutes, status: unit.status,
     });
@@ -63,6 +68,11 @@ export default function AdminUnitsPage() {
             value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
           <textarea placeholder="الوصف" className="w-full border rounded-lg p-2"
             value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+          <div>
+            <label className="text-xs text-neutral-500">المميزات (افصل بينها بفاصلة)</label>
+            <input placeholder="مكيف، واي فاي، مواقف" className="w-full border rounded-lg p-2"
+              value={form.amenitiesText} onChange={(e) => setForm({ ...form, amenitiesText: e.target.value })} />
+          </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-xs text-neutral-500">السعة</label>

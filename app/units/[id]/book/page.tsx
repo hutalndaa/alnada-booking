@@ -1,135 +1,92 @@
-"use client";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { Unit } from "@/lib/types";
+import SiteHeader from "@/components/SiteHeader";
+import SiteFooter from "@/components/SiteFooter";
+import BookingForm from "@/components/BookingForm";
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+export const revalidate = 0;
 
-export default function BookUnitPage() {
-  const params = useParams();
-  const router = useRouter();
-  const unitId = params.id as string;
+export default async function BookUnitPage({ params }: { params: { id: string } }) {
+  const { data: unit } = await supabaseAdmin
+    .from("units")
+    .select("*")
+    .eq("id", params.id)
+    .eq("status", "active")
+    .single();
+  if (!unit) notFound();
 
-  const [form, setForm] = useState({
-    guest_name: "",
-    guest_phone: "",
-    guest_email: "",
-    num_guests: 1,
-    date: "",
-    time: "",
-    hours: 1,
-  });
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<any>(null);
+  const { data: tiers } = await supabaseAdmin
+    .from("pricing_tiers")
+    .select("min_hours, discount_percent")
+    .or(`unit_id.eq.${params.id},unit_id.is.null`)
+    .order("min_hours");
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setSubmitting(true);
-    setError(null);
-
-    const start_time = new Date(`${form.date}T${form.time}:00`).toISOString();
-
-    const res = await fetch("/api/bookings", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        unit_id: unitId,
-        guest_name: form.guest_name,
-        guest_phone: form.guest_phone,
-        guest_email: form.guest_email || undefined,
-        num_guests: form.num_guests,
-        start_time,
-        hours: form.hours,
-      }),
-    });
-
-    const data = await res.json();
-    setSubmitting(false);
-
-    if (!res.ok) {
-      // 409 = تعارض: شخص ثاني حجز نفس الساعة قبلك بجزء من الثانية
-      setError(data.error ?? "حدث خطأ، حاول مرة أخرى");
-      return;
-    }
-
-    setResult(data);
-    // التوجيه لصفحة الدفع - راجع lib/payment.ts لاستبدالها ببوابة حقيقية
-    const paymentRes = await fetch("/api/payment/create-intent", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ booking_id: data.booking.id, amount: data.price.total }),
-    });
-    const paymentData = await paymentRes.json();
-    if (paymentRes.ok) {
-      router.push(paymentData.checkoutUrl);
-    }
-  }
-
-  if (result) {
-    return <main className="p-6 text-center">جارٍ تحويلك لصفحة الدفع...</main>;
-  }
+  const u = unit as Unit;
+  const tierList = (tiers ?? []).map((t) => ({
+    minHours: t.min_hours,
+    discountPercent: Number(t.discount_percent),
+  }));
 
   return (
-    <main className="max-w-md mx-auto p-6">
-      <h1 className="text-xl font-bold mb-4">تفاصيل الحجز</h1>
-      <form onSubmit={handleSubmit} className="space-y-3">
-        <input
-          required
-          placeholder="الاسم"
-          className="w-full border rounded-lg p-2"
-          value={form.guest_name}
-          onChange={(e) => setForm({ ...form, guest_name: e.target.value })}
-        />
-        <input
-          required
-          placeholder="رقم الجوال"
-          className="w-full border rounded-lg p-2"
-          value={form.guest_phone}
-          onChange={(e) => setForm({ ...form, guest_phone: e.target.value })}
-        />
-        <input
-          type="email"
-          placeholder="الإيميل (اختياري)"
-          className="w-full border rounded-lg p-2"
-          value={form.guest_email}
-          onChange={(e) => setForm({ ...form, guest_email: e.target.value })}
-        />
-        <div className="grid grid-cols-2 gap-3">
-          <input
-            required
-            type="date"
-            className="border rounded-lg p-2"
-            value={form.date}
-            onChange={(e) => setForm({ ...form, date: e.target.value })}
-          />
-          <input
-            required
-            type="time"
-            className="border rounded-lg p-2"
-            value={form.time}
-            onChange={(e) => setForm({ ...form, time: e.target.value })}
-          />
+    <>
+      <SiteHeader />
+      <main className="max-w-5xl mx-auto px-4 pt-6">
+        <Link href="/#cabins" className="text-sm text-emerald-800 hover:underline">← كل الأكواخ</Link>
+
+        <div className="mt-4 grid gap-8 lg:grid-cols-5">
+          <section className="lg:col-span-2 lg:sticky lg:top-20 self-start">
+            <div className="h-48 rounded-2xl bg-gradient-to-br from-emerald-700 to-emerald-900" />
+            <h1 className="mt-5 text-2xl font-extrabold text-emerald-950">{u.name}</h1>
+            <p className="mt-2 leading-8 text-stone-600">
+              {u.description || "كوخ مريح ومجهّز لقضاء وقت ممتع."}
+            </p>
+            <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
+              <div className="rounded-xl bg-white border border-stone-200 p-3">
+                <dt className="text-stone-500">السعة</dt>
+                <dd className="font-bold text-emerald-900">{u.capacity} أشخاص</dd>
+              </div>
+              <div className="rounded-xl bg-white border border-stone-200 p-3">
+                <dt className="text-stone-500">سعر الساعة</dt>
+                <dd className="font-bold text-emerald-900">{Number(u.base_hourly_price)} ريال</dd>
+              </div>
+            </dl>
+            {u.amenities?.length > 0 && (
+              <>
+                <h2 className="mt-5 font-bold text-emerald-950">المميزات</h2>
+                <ul className="mt-2 flex flex-wrap gap-2">
+                  {u.amenities.map((a) => (
+                    <li key={a} className="rounded-full bg-emerald-50 text-emerald-800 text-sm px-3 py-1">{a}</li>
+                  ))}
+                </ul>
+              </>
+            )}
+            {tierList.length > 0 && (
+              <>
+                <h2 className="mt-5 font-bold text-emerald-950">خصومات المدد الأطول</h2>
+                <ul className="mt-2 space-y-1 text-sm text-stone-600">
+                  {tierList.map((t) => (
+                    <li key={t.minHours}>من {t.minHours} ساعات: خصم {t.discountPercent}%</li>
+                  ))}
+                </ul>
+              </>
+            )}
+          </section>
+
+          <section className="lg:col-span-3">
+            <h2 className="mb-4 text-xl font-extrabold text-emerald-950">احجز الآن</h2>
+            <BookingForm
+              unitId={u.id}
+              hourlyPrice={Number(u.base_hourly_price)}
+              capacity={u.capacity}
+              bufferMinutes={u.cleanup_buffer_minutes}
+              tiers={tierList}
+            />
+          </section>
         </div>
-        <div>
-          <label className="text-sm text-neutral-600">عدد الساعات</label>
-          <input
-            required
-            type="number"
-            min={1}
-            className="w-full border rounded-lg p-2"
-            value={form.hours}
-            onChange={(e) => setForm({ ...form, hours: Number(e.target.value) })}
-          />
-        </div>
-        {error && (
-          <div className="p-3 bg-red-50 text-red-700 text-sm rounded-lg">{error}</div>
-        )}
-        <button
-          disabled={submitting}
-          className="w-full bg-neutral-900 text-white rounded-lg p-3 font-medium disabled:opacity-50"
-        >
-          {submitting ? "جارٍ الحجز..." : "احجز الآن"}
-        </button>
-      </form>
-    </main>
+      </main>
+      <SiteFooter />
+    </>
   );
 }

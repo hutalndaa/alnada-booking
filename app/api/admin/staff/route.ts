@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireStaff } from "@/lib/authGuard";
-import { supabaseAdmin } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 // GET /api/admin/staff - المالك فقط يشوف قائمة الموظفين
 export async function GET(req: NextRequest) {

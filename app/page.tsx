@@ -1,37 +1,100 @@
-import { supabase } from "@/lib/supabase";
 import Link from "next/link";
+import { supabase } from "@/lib/supabase";
 import { Unit } from "@/lib/types";
+import SiteHeader from "@/components/SiteHeader";
+import SiteFooter from "@/components/SiteFooter";
 
 export const revalidate = 0;
 
+const FEATURES = [
+  { title: "حجز بالساعة", text: "اختر الوقت اللي يناسبك وادفع على قد استخدامك." },
+  { title: "خصم للمدد الأطول", text: "كل ما زادت ساعاتك زاد الخصم تلقائياً." },
+  { title: "تأكيد فوري", text: "يتأكد حجزك مباشرة بعد الدفع." },
+];
+
 export default async function HomePage() {
-  const { data: units } = await supabase
-    .from("units")
-    .select("*")
-    .eq("status", "active")
-    .order("created_at");
+  const { data } = await supabase.from("units").select("*").eq("status", "active").order("created_at");
+  const units = (data ?? []) as Unit[];
 
   return (
-    <main className="max-w-3xl mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-6">أكواخ الندى</h1>
-      <div className="grid gap-4">
-        {(units as Unit[] | null)?.map((unit) => (
-          <Link
-            key={unit.id}
-            href={`/units/${unit.id}/book`}
-            className="block border rounded-xl p-4 bg-white hover:shadow-md transition"
+    <>
+      <SiteHeader />
+      <section className="bg-gradient-to-b from-emerald-900 to-emerald-800 text-white">
+        <div className="max-w-5xl mx-auto px-4 py-14 sm:py-20 text-center">
+          <h1 className="text-3xl sm:text-5xl font-extrabold leading-tight">أكواخ الندى</h1>
+          <p className="mt-4 text-emerald-100 text-base sm:text-lg max-w-xl mx-auto">
+            مكان هادي ومريح تقضي فيه وقتك. احجز كوخك بالساعة بخطوات بسيطة.
+          </p>
+          <a
+            href="#cabins"
+            className="inline-block mt-8 rounded-xl bg-amber-400 px-8 py-3 font-bold text-emerald-950 hover:bg-amber-300 transition"
           >
-            <h2 className="text-lg font-semibold">{unit.name}</h2>
-            <p className="text-neutral-600 text-sm mt-1">{unit.description}</p>
-            <div className="mt-2 text-sm text-neutral-500">
-              يتسع لـ {unit.capacity} أشخاص · {unit.base_hourly_price} ريال/ساعة
+            تصفّح الأكواخ
+          </a>
+        </div>
+      </section>
+
+      <main className="max-w-5xl mx-auto px-4">
+        <section className="grid gap-4 sm:grid-cols-3 -mt-8 relative">
+          {FEATURES.map((f) => (
+            <div key={f.title} className="rounded-2xl bg-white border border-stone-200 p-5 shadow-sm text-center">
+              <div className="font-bold text-emerald-900">{f.title}</div>
+              <div className="text-sm text-stone-500 mt-1">{f.text}</div>
             </div>
-          </Link>
-        ))}
-        {!units?.length && (
-          <p className="text-neutral-500">لا توجد وحدات متاحة حالياً.</p>
-        )}
-      </div>
-    </main>
+          ))}
+        </section>
+
+        <section id="cabins" className="pt-14 scroll-mt-16">
+          <h2 className="text-2xl font-extrabold text-emerald-950 mb-1">اختر كوخك</h2>
+          <p className="text-stone-500 mb-6">كل كوخ بمميزاته وسعره الواضح للساعة.</p>
+
+          <div className="grid gap-5 sm:grid-cols-2">
+            {units.map((unit, i) => (
+              <article
+                key={unit.id}
+                className="group flex flex-col rounded-2xl bg-white border border-stone-200 overflow-hidden shadow-sm hover:shadow-lg transition"
+              >
+                <div className="h-36 bg-gradient-to-br from-emerald-700 to-emerald-900 flex items-end p-4">
+                  <span className="rounded-full bg-white/15 backdrop-blur px-3 py-1 text-xs text-white">
+                    كوخ رقم {i + 1}
+                  </span>
+                </div>
+                <div className="flex flex-1 flex-col p-5">
+                  <h3 className="text-lg font-extrabold text-emerald-950">{unit.name}</h3>
+                  <p className="mt-2 text-sm leading-7 text-stone-600">
+                    {unit.description || "كوخ مريح ومجهّز لقضاء وقت ممتع."}
+                  </p>
+                  {unit.amenities?.length > 0 && (
+                    <ul className="mt-3 flex flex-wrap gap-2">
+                      {unit.amenities.map((a) => (
+                        <li key={a} className="rounded-full bg-emerald-50 text-emerald-800 text-xs px-3 py-1">
+                          {a}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  <div className="mt-5 flex items-end justify-between">
+                    <div>
+                      <div className="text-xs text-stone-500">يتسع لـ {unit.capacity} أشخاص</div>
+                      <div className="text-2xl font-extrabold text-emerald-900">
+                        {Number(unit.base_hourly_price)} <span className="text-sm font-medium text-stone-500">ريال / ساعة</span>
+                      </div>
+                    </div>
+                    <Link
+                      href={`/units/${unit.id}/book`}
+                      className="rounded-xl bg-emerald-800 px-5 py-2.5 text-sm font-bold text-white hover:bg-emerald-900 transition"
+                    >
+                      احجز الآن
+                    </Link>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+          {!units.length && <p className="text-stone-500">لا توجد أكواخ متاحة حالياً.</p>}
+        </section>
+      </main>
+      <SiteFooter />
+    </>
   );
 }
