@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { notifyOwner, describeDuration, fmtWhen } from "@/lib/notify";
 
 /**
  * POST /api/bookings/[id]/confirm
@@ -54,12 +55,18 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       paid_at: new Date().toISOString(),
     })
     .eq("id", id)
-    .select()
+    .select("*, units(name)")
     .single();
 
   if (error) {
     console.error(error);
     return NextResponse.json({ error: "تعذر تأكيد الحجز" }, { status: 500 });
+  }
+
+  if (existing.status === "pending") {
+    await notifyOwner(
+      `✅ تم تأكيد حجز بعد الدفع\n${(updated as any).units?.name ?? ""}\nالعميل: ${updated.guest_name} - ${updated.guest_phone}\nالموعد: ${fmtWhen(updated.start_time)}\nالمدة: ${describeDuration(updated.start_time, updated.end_time)}\nالمبلغ: ${updated.total_price} ريال`
+    );
   }
 
   return NextResponse.json({ booking: updated });

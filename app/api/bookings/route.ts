@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { hasBlockConflict } from "@/lib/blocks";
+import { notifyOwner, describeDuration, fmtWhen } from "@/lib/notify";
 import { calculatePrice } from "@/lib/pricing";
 import { isValidName, isValidPhone, isValidEmail, cleanPhoneInput } from "@/lib/validation";
 
@@ -39,6 +40,28 @@ export async function POST(req: NextRequest) {
     }
     if (isNaN(new Date(start_time).getTime()) || new Date(start_time).getTime() < Date.now() - 5 * 60 * 1000) {
       return NextResponse.json({ error: "وقت البداية يجب أن يكون في المستقبل" }, { status: 400 });
+    }
+
+    // حماية من التخريب: منع حجز عشرات الأوقات الوهمية
+    const clientIp = (req.headers.get("x-forwarded-for")?.split(",")[0] ?? req.headers.get("x-real-ip") ?? "").trim() || null;
+    const nowIso = new Date().toISOString();
+    if (clientIp) {
+      const { count: hourly } = await supabaseAdmin
+        .from("bookings").select("id", { count: "exact", head: true })
+        .eq("client_ip", clientIp).gt("created_at", new Date(Date.now() - 3600000).toISOString());
+      if ((hourly ?? 0) >= 8) {
+        return NextResponse.json({ error: "محاولات كثيرة، جرّب بعد قليل." }, { status: 429 });
+      }
+    }
+    const pendingMatch = clientIp ? `client_ip.eq.${clientIp},guest_phone.eq.${phone}` : `guest_phone.eq.${phone}`;
+    const { count: openHolds } = await supabaseAdmin
+      .from("bookings").select("id", { count: "exact", head: true })
+      .eq("status", "pending").gt("hold_expires_at", nowIso).or(pendingMatch);
+    if ((openHolds ?? 0) >= 2) {
+      return NextResponse.json(
+        { error: "عندك حجز بانتظار الدفع. أكمل دفعه أو انتظر دقائق قبل حجز جديد." },
+        { status: 429 }
+      );
     }
 
     // 1) جلب بيانات الوحدة (السعر + إعدادات الفاصل والمهلة)
@@ -89,6 +112,7 @@ export async function POST(req: NextRequest) {
         num_guests: num_guests ?? 1,
         start_time: startTime.toISOString(),
         end_time: endTime.toISOString(),
+        client_ip: clientIp,
         buffer_minutes: unit.cleanup_buffer_minutes,
         hourly_price: unit.base_hourly_price,
         discount_percent: price.discountPercent,
@@ -110,6 +134,10 @@ export async function POST(req: NextRequest) {
       console.error(insertError);
       return NextResponse.json({ error: "تعذر إنشاء الحجز" }, { status: 500 });
     }
+
+    await notifyOwner(
+      `🔔 حجز جديد بانتظار الدفع\n${unit.name}\nالعميل: ${booking.guest_name} - ${booking.guest_phone}\nالموعد: ${fmtWhen(booking.start_time)}\nالمدة: ${describeDuration(booking.start_time, booking.end_time)}\nالمبلغ: ${booking.total_price} ريال`
+    );
 
     // 4) الخطوة التالية: توجيه الضيف لبوابة الدفع مع ربط booking.id
     //    راجع app/api/bookings/[id]/confirm/route.ts (Webhook)

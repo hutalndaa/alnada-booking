@@ -261,7 +261,7 @@ export default function BookingForm({ unitId, hourlyPrice, capacity, bufferMinut
         {submitting ? "جارٍ الحجز..." : "تأكيد الحجز والانتقال للدفع"}
       </button>
       <p className="text-center text-xs text-stone-500">
-        يُحجز الوقت لك مؤقتاً لمدة 15 دقيقة لإتمام الدفع، وبعدها يتأكد الحجز.
+        يُحجز الوقت لك مؤقتاً لمدة 5 دقائق لإتمام الدفع، وبعدها يتأكد الحجز.
       </p>
       <p className="text-center text-xs text-stone-500">
         بإتمام الحجز أنت توافق على{" "}
