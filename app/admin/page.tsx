@@ -115,7 +115,7 @@ export default function AdminBookingsPage() {
         value={q}
         onChange={(e) => setQ(e.target.value)}
         placeholder="ابحث برقم الجوال أو رقم الحجز أو الاسم"
-        className="w-full rounded-xl border bg-white px-4 py-2.5 text-sm outline-none focus:border-emerald-700"
+        className="w-full rounded-xl border bg-white px-4 py-2.5 text-sm outline-none focus:border-sadu-700"
       />
       {!bookings.length && <p className="text-neutral-500">لا توجد حجوزات بعد.</p>}
       {!!bookings.length && !shown.length && <p className="text-neutral-500">ما فيه نتيجة للبحث.</p>}

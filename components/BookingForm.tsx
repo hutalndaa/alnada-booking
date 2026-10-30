@@ -21,7 +21,7 @@ interface Props {
 interface Busy { start_time: string; end_time: string; buffer_minutes: number }
 
 const inputCls =
-  "w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-base outline-none focus:border-emerald-700 focus:ring-2 focus:ring-emerald-200 transition";
+  "w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-base outline-none focus:border-sadu-700 focus:ring-2 focus:ring-sadu-200 transition";
 const labelCls = "block text-sm font-medium text-stone-700 mb-1.5";
 const errCls = "mt-1 text-xs text-red-600";
 
@@ -143,7 +143,7 @@ export default function BookingForm({ unitId, hourlyPrice, weekendPrice, holiday
     <form onSubmit={handleSubmit} noValidate className="space-y-6">
       {/* الموعد */}
       <fieldset className="rounded-2xl bg-white border border-stone-200 p-5 shadow-sm space-y-4">
-        <legend className="px-2 font-extrabold text-emerald-950">الموعد</legend>
+        <legend className="px-2 font-extrabold text-ink-900">الموعد</legend>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className={labelCls}>التاريخ</label>
@@ -162,7 +162,7 @@ export default function BookingForm({ unitId, hourlyPrice, weekendPrice, holiday
           <label className={labelCls}>وقت البداية</label>
           <div
             className={`mb-3 rounded-xl px-3 py-2 text-sm font-medium ${
-              availableCount > 0 ? "bg-emerald-50 text-emerald-800" : "bg-red-50 text-red-700"
+              availableCount > 0 ? "bg-pine-50 text-ink-700" : "bg-red-50 text-red-700"
             }`}
           >
             {availableCount > 0
@@ -178,10 +178,10 @@ export default function BookingForm({ unitId, hourlyPrice, weekendPrice, holiday
                   key={h} type="button" disabled={disabled} onClick={() => setHour(h)}
                   className={`rounded-xl border px-2 py-2.5 text-sm font-medium transition ${
                     active
-                      ? "border-emerald-800 bg-emerald-800 text-white"
+                      ? "border-sadu-800 bg-sadu-800 text-white"
                       : disabled
                       ? "border-stone-200 bg-stone-100 text-stone-300 line-through cursor-not-allowed"
-                      : "border-stone-300 bg-white text-stone-700 hover:border-emerald-700"
+                      : "border-stone-300 bg-white text-stone-700 hover:border-sadu-700"
                   }`}
                 >
                   {hourLabel(h)}
@@ -206,7 +206,7 @@ export default function BookingForm({ unitId, hourlyPrice, weekendPrice, holiday
 
       {/* بياناتك */}
       <fieldset className="rounded-2xl bg-white border border-stone-200 p-5 shadow-sm space-y-4">
-        <legend className="px-2 font-extrabold text-emerald-950">بياناتك</legend>
+        <legend className="px-2 font-extrabold text-ink-900">بياناتك</legend>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className={labelCls}>الاسم الأول</label>
@@ -249,16 +249,16 @@ export default function BookingForm({ unitId, hourlyPrice, weekendPrice, holiday
       </fieldset>
 
       {/* الملخص */}
-      <div className="rounded-2xl bg-emerald-950 text-white p-5 shadow-sm">
-        <div className="flex justify-between text-sm text-emerald-100">
+      <div className="rounded-2xl bg-ink-900 text-white p-5 shadow-sm">
+        <div className="flex justify-between text-sm text-mist-200">
           <span>
             {dayPrice} ريال × {hours} {hours === 1 ? "ساعة" : "ساعات"}
-            {peak && <span className="mr-1 text-amber-300">(سعر نهاية الأسبوع/الإجازات)</span>}
+            {peak && <span className="mr-1 text-pine-300">(سعر نهاية الأسبوع/الإجازات)</span>}
           </span>
           <span>{price.subtotal} ريال</span>
         </div>
         {price.discountPercent > 0 && (
-          <div className="flex justify-between text-sm text-amber-300 mt-1">
+          <div className="flex justify-between text-sm text-pine-300 mt-1">
             <span>خصم {price.discountPercent}%</span>
             <span>- {price.discountAmount} ريال</span>
           </div>
@@ -267,9 +267,9 @@ export default function BookingForm({ unitId, hourlyPrice, weekendPrice, holiday
           <span className="font-medium">الإجمالي</span>
           <span className="text-3xl font-extrabold">{price.total} <span className="text-base font-medium">ريال</span></span>
         </div>
-        <p className="mt-2 text-xs text-emerald-200">{VAT_NOTE}</p>
+        <p className="mt-2 text-xs text-pine-200">{VAT_NOTE}</p>
         {nextTier && (
-          <p className="mt-3 text-xs text-amber-200">
+          <p className="mt-3 text-xs text-pine-200">
             احجز {nextTier.minHours} ساعات أو أكثر واحصل على خصم {nextTier.discountPercent}%
           </p>
         )}
@@ -279,7 +279,7 @@ export default function BookingForm({ unitId, hourlyPrice, weekendPrice, holiday
 
       <button
         disabled={submitting}
-        className="w-full rounded-xl bg-amber-400 py-4 text-lg font-extrabold text-emerald-950 hover:bg-amber-300 transition disabled:opacity-50"
+        className="w-full rounded-xl bg-pine-400 py-4 text-lg font-extrabold text-ink-900 hover:bg-pine-300 transition disabled:opacity-50"
       >
         {submitting ? "جارٍ الحجز..." : "تأكيد الحجز والانتقال للدفع"}
       </button>
@@ -288,9 +288,9 @@ export default function BookingForm({ unitId, hourlyPrice, weekendPrice, holiday
       </p>
       <p className="text-center text-xs text-stone-500">
         بإتمام الحجز أنت توافق على{" "}
-        <a href="/terms" target="_blank" className="text-emerald-800 underline">الشروط والأحكام</a>،{" "}
-        <a href="/refund" target="_blank" className="text-emerald-800 underline">سياسة الاسترجاع</a>{" "}و{" "}
-        <a href="/privacy" target="_blank" className="text-emerald-800 underline">الخصوصية</a>.
+        <a href="/terms" target="_blank" className="text-sadu-800 underline">الشروط والأحكام</a>،{" "}
+        <a href="/refund" target="_blank" className="text-sadu-800 underline">سياسة الاسترجاع</a>{" "}و{" "}
+        <a href="/privacy" target="_blank" className="text-sadu-800 underline">الخصوصية</a>.
       </p>
     </form>
   );

@@ -6,15 +6,15 @@ export default function InfoBar({ weekday, weekend }: { weekday?: number; weeken
     <section className="rounded-2xl bg-white border border-stone-200 p-5 shadow-sm text-sm leading-8 text-stone-700">
       <div className="grid gap-3 sm:grid-cols-3">
         <div>
-          <div className="font-bold text-emerald-900">🕰️ ساعات العمل</div>
+          <div className="font-bold text-ink-900">ساعات العمل</div>
           <div>{HOURS_TEXT}</div>
         </div>
         <div>
-          <div className="font-bold text-emerald-900">📩 الرد على الاستفسارات</div>
+          <div className="font-bold text-ink-900">الرد على الاستفسارات</div>
           <div>{INQUIRY_TEXT}</div>
         </div>
         <div>
-          <div className="font-bold text-emerald-900">💰 الأسعار (للساعة)</div>
+          <div className="font-bold text-ink-900">الأسعار (للساعة)</div>
           <div>
             أيام الأسبوع: {weekday ?? 35} ريال<br />
             نهاية الأسبوع والإجازات: {weekend ?? 45} ريال

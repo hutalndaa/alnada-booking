@@ -1,3 +1,28 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@keyframes hero-fade {
+  0% { opacity: 0; transform: scale(1); }
+  4% { opacity: 1; }
+  20% { opacity: 1; }
+  24% { opacity: 0; }
+  100% { opacity: 0; transform: scale(1.06); }
+}
+.hero-slide {
+  animation-name: hero-fade;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-slide { animation: none; }
+}
+
+/* شريط بنقشة السدو */
+.sadu-band {
+  background:
+    linear-gradient(135deg, #862b1e 25%, transparent 25%) 0 0 / 12px 12px,
+    linear-gradient(225deg, #862b1e 25%, transparent 25%) 0 0 / 12px 12px,
+    linear-gradient(#f3f5f6, #f3f5f6);
+  border-top: 2px solid #1e2428;
+}

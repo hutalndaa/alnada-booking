@@ -24,17 +24,17 @@ function Success() {
   return (
     <main className="max-w-md mx-auto px-4 pt-10">
       <div className="rounded-2xl bg-white border border-stone-200 p-8 text-center shadow-sm">
-        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-2xl text-emerald-800">✓</div>
-        <h1 className="font-extrabold text-xl text-emerald-950 mb-2">تم تأكيد حجزك</h1>
+        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-green-100 text-2xl text-green-800">✓</div>
+        <h1 className="font-extrabold text-xl text-ink-900 mb-2">تم تأكيد حجزك</h1>
         {booking && (
-          <div className="mt-3 rounded-xl bg-emerald-50 p-3">
-            <div className="text-xs text-emerald-800">رقم الحجز</div>
-            <div className="text-3xl font-extrabold tracking-wide text-emerald-950" dir="ltr">{booking.booking_no}</div>
+          <div className="mt-3 rounded-xl bg-pine-50 p-3">
+            <div className="text-xs text-sadu-800">رقم الحجز</div>
+            <div className="text-3xl font-extrabold tracking-wide text-ink-900" dir="ltr">{booking.booking_no}</div>
           </div>
         )}
         {booking && (
           <div className="mt-3 rounded-xl bg-stone-50 p-4 text-sm text-stone-600 space-y-1">
-            <div className="font-bold text-emerald-900">{booking.units?.name}</div>
+            <div className="font-bold text-ink-900">{booking.units?.name}</div>
             <div>{fmt(booking.start_time)}</div>
           </div>
         )}
@@ -44,12 +44,12 @@ function Success() {
             href={booking.units.location_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-4 flex items-center justify-center gap-2 rounded-xl bg-amber-400 px-4 py-3 font-bold text-emerald-950 hover:bg-amber-300"
+            className="mt-4 flex items-center justify-center gap-2 rounded-xl bg-pine-400 px-4 py-3 font-bold text-ink-900 hover:bg-pine-300"
           >
             <span aria-hidden>📍</span> افتح الموقع في خرائط قوقل
           </a>
         )}
-        <Link href="/" className="inline-block mt-5 rounded-xl bg-emerald-800 px-6 py-2.5 text-sm font-bold text-white">
+        <Link href="/" className="inline-block mt-5 rounded-xl bg-sadu-800 px-6 py-2.5 text-sm font-bold text-white">
           الرجوع للرئيسية
         </Link>
       </div>

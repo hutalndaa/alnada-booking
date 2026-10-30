@@ -82,15 +82,15 @@ export default function MockPayPage() {
         ) : booking.status !== "pending" ? (
           <div className="rounded-2xl bg-white border border-stone-200 p-6 text-center">
             {booking.status === "confirmed" ? "هذا الحجز مؤكد وتم دفعه." : "انتهت مهلة هذا الحجز. ارجع واحجز من جديد."}
-            <a href="/" className="block mt-4 text-emerald-800 font-bold">الرجوع للرئيسية</a>
+            <a href="/" className="block mt-4 text-sadu-800 font-bold">الرجوع للرئيسية</a>
           </div>
         ) : (
           <div className="rounded-2xl bg-white border border-stone-200 p-6 shadow-sm text-center">
             <div className="text-xs text-amber-700 bg-amber-50 rounded-lg p-2 mb-5">
               بوابة دفع تجريبية - لن يُسحب أي مبلغ
             </div>
-            <h1 className="font-extrabold text-xl text-emerald-950">إتمام الدفع</h1>
-            <p className="text-xs text-stone-500 mt-1">رقم الحجز: <b className="text-emerald-900">{booking.booking_no}</b></p>
+            <h1 className="font-extrabold text-xl text-ink-900">إتمام الدفع</h1>
+            <p className="text-xs text-stone-500 mt-1">رقم الحجز: <b className="text-ink-900">{booking.booking_no}</b></p>
             {remaining !== null && (
               <div
                 role="timer"
@@ -103,17 +103,17 @@ export default function MockPayPage() {
             )}
             <p className="text-stone-500 text-sm mt-1">{booking.guest_name}</p>
             <div className="mt-4 rounded-xl bg-stone-50 p-4 text-sm text-stone-600 space-y-1">
-              <div className="font-bold text-emerald-900">{booking.units?.name}</div>
+              <div className="font-bold text-ink-900">{booking.units?.name}</div>
               <div>{fmt(booking.start_time)}</div>
             </div>
-            <div className="text-4xl font-extrabold text-emerald-900 my-6">
+            <div className="text-4xl font-extrabold text-ink-900 my-6">
               {booking.total_price} <span className="text-lg font-medium">ريال</span>
             </div>
             <p className="-mt-4 mb-5 text-xs text-stone-500">{VAT_NOTE}</p>
             {error && <div className="text-red-600 text-sm mb-3">{error}</div>}
             <button
               onClick={handlePay} disabled={paying || timeUp}
-              className="w-full rounded-xl bg-emerald-800 py-3.5 font-bold text-white hover:bg-emerald-900 disabled:opacity-50"
+              className="w-full rounded-xl bg-sadu-800 py-3.5 font-bold text-white hover:bg-ink-900 disabled:opacity-50"
             >
               {paying ? "جارٍ الدفع..." : "ادفع الآن (تجريبي)"}
             </button>

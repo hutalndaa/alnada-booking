@@ -102,7 +102,7 @@ export default function CalendarPage() {
 
       <div className="flex flex-wrap gap-3 text-xs text-neutral-600">
         <span className="flex items-center gap-1"><i className="inline-block w-3 h-3 rounded bg-green-500" /> مؤكد</span>
-        <span className="flex items-center gap-1"><i className="inline-block w-3 h-3 rounded bg-amber-400" /> بانتظار الدفع</span>
+        <span className="flex items-center gap-1"><i className="inline-block w-3 h-3 rounded bg-pine-400" /> بانتظار الدفع</span>
         <span className="flex items-center gap-1"><i className="inline-block w-3 h-3 rounded bg-neutral-500" /> مقفل</span>
         <span className="flex items-center gap-1"><i className="inline-block w-3 h-3 rounded bg-green-200" /> فاصل التنظيف</span>
         <span>اضغط على فراغ في الصف لإضافة حجز</span>
@@ -152,7 +152,7 @@ export default function CalendarPage() {
                   const p = pos(b.start_time, b.end_time);
                   const bufEnd = new Date(new Date(b.end_time).getTime() + (b.buffer_minutes ?? 15) * 60000).toISOString();
                   const pb = pos(b.end_time, bufEnd);
-                  const color = b.status === "confirmed" ? "bg-green-500" : "bg-amber-400 text-neutral-900";
+                  const color = b.status === "confirmed" ? "bg-green-500" : "bg-pine-400 text-neutral-900";
                   return (
                     <div key={b.id}>
                       <div className="absolute top-1 bottom-1 rounded-r bg-green-200 pointer-events-none" style={{ left: pb.left, width: pb.width }} />
