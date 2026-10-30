@@ -3,6 +3,8 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { hasBlockConflict } from "@/lib/blocks";
 import { notifyOwner, describeDuration, fmtWhen } from "@/lib/notify";
 import { calculatePrice } from "@/lib/pricing";
+import { getHolidays } from "@/lib/holidays";
+import { hourlyFor, riyadhDate, withinOpeningHours, HOURS_TEXT } from "@/lib/hours";
 import { isValidName, isValidPhone, isValidEmail, cleanPhoneInput } from "@/lib/validation";
 
 /**
@@ -84,8 +86,22 @@ export async function POST(req: NextRequest) {
       .select("min_hours, discount_percent")
       .or(`unit_id.eq.${unit_id},unit_id.is.null`);
 
+    const startTime = new Date(start_time);
+    const endTime = new Date(startTime.getTime() + Number(hours) * 60 * 60 * 1000);
+
+    if (!withinOpeningHours(startTime, endTime)) {
+      return NextResponse.json(
+        { error: `ساعات العمل ${HOURS_TEXT}، ويجب أن ينتهي الحجز قبل الإغلاق.` },
+        { status: 400 }
+      );
+    }
+
+    // سعر الساعة حسب اليوم: عادي أو نهاية الأسبوع/إجازة
+    const holidays = await getHolidays();
+    const dayHourly = hourlyFor(unit.base_hourly_price, unit.weekend_hourly_price, riyadhDate(startTime), holidays);
+
     const price = calculatePrice(
-      Number(unit.base_hourly_price),
+      dayHourly,
       Number(hours),
       (tiers ?? []).map((t) => ({ minHours: t.min_hours, discountPercent: t.discount_percent }))
     );
@@ -93,9 +109,6 @@ export async function POST(req: NextRequest) {
     if (Number(num_guests ?? 1) > unit.capacity) {
       return NextResponse.json({ error: `الكوخ يتسع لـ ${unit.capacity} أشخاص كحد أقصى` }, { status: 400 });
     }
-
-    const startTime = new Date(start_time);
-    const endTime = new Date(startTime.getTime() + Number(hours) * 60 * 60 * 1000);
 
     if (await hasBlockConflict(unit_id, startTime, endTime, unit.cleanup_buffer_minutes)) {
       return NextResponse.json({ error: "هذا الوقت غير متاح للحجز. جرّب وقت ثاني." }, { status: 409 });
@@ -114,7 +127,7 @@ export async function POST(req: NextRequest) {
         end_time: endTime.toISOString(),
         client_ip: clientIp,
         buffer_minutes: unit.cleanup_buffer_minutes,
-        hourly_price: unit.base_hourly_price,
+        hourly_price: dayHourly,
         discount_percent: price.discountPercent,
         total_price: price.total,
         status: "pending",

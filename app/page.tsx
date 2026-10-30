@@ -4,6 +4,7 @@ import { Unit } from "@/lib/types";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import { CABIN_PHOTOS } from "@/lib/photos";
+import InfoBar from "@/components/InfoBar";
 
 export const revalidate = 0;
 
@@ -24,7 +25,8 @@ export default async function HomePage() {
         <div className="max-w-5xl mx-auto px-4 py-14 sm:py-20 text-center">
           <h1 className="text-3xl sm:text-5xl font-extrabold leading-tight">أكواخ الندى</h1>
           <p className="mt-4 text-emerald-100 text-base sm:text-lg max-w-xl mx-auto">
-            مكان هادي ومريح تقضي فيه وقتك. احجز كوخك بالساعة بخطوات بسيطة.
+            مرحباً بكم في عالم من الهدوء والجمال… حيث تلتقي الراحة بالفخامة وتُصنع الذكريات التي لا تُنسى ✨
+            <br />احجز كوخك بالساعة بخطوات بسيطة.
           </p>
           <a
             href="#cabins"
@@ -44,6 +46,10 @@ export default async function HomePage() {
             </div>
           ))}
         </section>
+
+        <div className="mt-6">
+          <InfoBar weekday={Number(units[0]?.base_hourly_price ?? 35)} weekend={Number(units[0]?.weekend_hourly_price ?? units[0]?.base_hourly_price ?? 45)} />
+        </div>
 
         <section id="cabins" className="pt-14 scroll-mt-16">
           <h2 className="text-2xl font-extrabold text-emerald-950 mb-1">اختر كوخك</h2>
@@ -87,6 +93,9 @@ export default async function HomePage() {
                       <div className="text-2xl font-extrabold text-emerald-900">
                         {Number(unit.base_hourly_price)} <span className="text-sm font-medium text-stone-500">ريال / ساعة</span>
                       </div>
+                      {unit.weekend_hourly_price && Number(unit.weekend_hourly_price) !== Number(unit.base_hourly_price) && (
+                        <div className="text-xs text-stone-500">{Number(unit.weekend_hourly_price)} ريال نهاية الأسبوع والإجازات</div>
+                      )}
                     </div>
                     <Link
                       href={`/units/${unit.id}/book`}

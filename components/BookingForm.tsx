@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { calculatePrice, PricingTier } from "@/lib/pricing";
 import { VAT_NOTE } from "@/lib/config";
+import { OPEN_HOUR, CLOSE_HOUR, HOURS_TEXT, hourlyFor, isPeakDay } from "@/lib/hours";
 import {
   cleanNameInput, cleanPhoneInput, isValidName, isValidPhone, isValidEmail,
 } from "@/lib/validation";
@@ -11,6 +12,8 @@ import {
 interface Props {
   unitId: string;
   hourlyPrice: number;
+  weekendPrice: number | null;
+  holidays: string[];
   capacity: number;
   bufferMinutes: number;
   tiers: PricingTier[];
@@ -33,7 +36,7 @@ function hourLabel(h: number) {
   return `${h12}:00 ${suffix}`;
 }
 
-export default function BookingForm({ unitId, hourlyPrice, capacity, bufferMinutes, tiers }: Props) {
+export default function BookingForm({ unitId, hourlyPrice, weekendPrice, holidays, capacity, bufferMinutes, tiers }: Props) {
   const router = useRouter();
   const [first, setFirst] = useState("");
   const [last, setLast] = useState("");
@@ -72,11 +75,13 @@ export default function BookingForm({ unitId, hourlyPrice, capacity, bufferMinut
     return new Date(`${date}T${pad(h)}:00:00`).getTime() < Date.now();
   }
 
-  const availableCount = Array.from({ length: 24 }, (_, h) => h).filter(
-    (h) => !isPast(h) && !slotConflicts(h, hours)
-  ).length;
+  const OPEN_HOURS = Array.from({ length: CLOSE_HOUR - OPEN_HOUR }, (_, i) => OPEN_HOUR + i);
+  const tooLate = (h: number) => h + hours > CLOSE_HOUR; // الحجز يجب أن ينتهي قبل الإغلاق
+  const availableCount = OPEN_HOURS.filter((h) => !isPast(h) && !tooLate(h) && !slotConflicts(h, hours)).length;
 
-  const price = useMemo(() => calculatePrice(hourlyPrice, hours, tiers), [hourlyPrice, hours, tiers]);
+  const dayPrice = hourlyFor(hourlyPrice, weekendPrice, date, holidays);
+  const peak = isPeakDay(date, holidays) && dayPrice !== hourlyPrice;
+  const price = useMemo(() => calculatePrice(dayPrice, hours, tiers), [dayPrice, hours, tiers]);
   const nextTier = useMemo(
     () => tiers.filter((t) => t.minHours > hours).sort((a, b) => a.minHours - b.minHours)[0],
     [tiers, hours]
@@ -165,8 +170,8 @@ export default function BookingForm({ unitId, hourlyPrice, capacity, bufferMinut
               : "لا توجد أوقات متاحة في هذا اليوم، جرّب يوماً آخر"}
           </div>
           <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-            {Array.from({ length: 24 }, (_, h) => h).map((h) => {
-              const disabled = isPast(h) || slotConflicts(h, hours);
+            {OPEN_HOURS.map((h) => {
+              const disabled = isPast(h) || tooLate(h) || slotConflicts(h, hours);
               const active = hour === h;
               return (
                 <button
@@ -185,7 +190,7 @@ export default function BookingForm({ unitId, hourlyPrice, capacity, bufferMinut
             })}
           </div>
           <p className="mt-2 text-xs text-stone-500">
-            الأوقات المشطوبة محجوزة أو غير متاحة. يُضاف {bufferMinutes} دقيقة تنظيف بعد كل حجز.
+            ساعات العمل {HOURS_TEXT}. الأوقات المشطوبة محجوزة أو غير متاحة. يُضاف {bufferMinutes} دقيقة تنظيف بعد كل حجز.
           </p>
           {show("slot") && <p className={errCls}>{errors.slot}</p>}
         </div>
@@ -246,7 +251,10 @@ export default function BookingForm({ unitId, hourlyPrice, capacity, bufferMinut
       {/* الملخص */}
       <div className="rounded-2xl bg-emerald-950 text-white p-5 shadow-sm">
         <div className="flex justify-between text-sm text-emerald-100">
-          <span>{hourlyPrice} ريال × {hours} {hours === 1 ? "ساعة" : "ساعات"}</span>
+          <span>
+            {dayPrice} ريال × {hours} {hours === 1 ? "ساعة" : "ساعات"}
+            {peak && <span className="mr-1 text-amber-300">(سعر نهاية الأسبوع/الإجازات)</span>}
+          </span>
           <span>{price.subtotal} ريال</span>
         </div>
         {price.discountPercent > 0 && (

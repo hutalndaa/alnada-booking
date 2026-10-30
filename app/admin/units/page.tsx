@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useStaffAuth, authHeaders } from "@/lib/useStaffAuth";
 
 const empty = {
-  name: "", description: "", amenitiesText: "", location_url: "", capacity: 2, base_hourly_price: 35,
+  name: "", description: "", amenitiesText: "", location_url: "", capacity: 2, base_hourly_price: 35, weekend_hourly_price: 45,
   cleanup_buffer_minutes: 15, hold_minutes: 15, status: "active",
 };
 
@@ -33,6 +33,7 @@ export default function AdminUnitsPage() {
     const payload = {
       ...rest,
       location_url: String(rest.location_url ?? "").trim() || null,
+      weekend_hourly_price: rest.weekend_hourly_price === "" ? null : rest.weekend_hourly_price,
       amenities: String(amenitiesText ?? "").split(/[,،\n]/).map((x: string) => x.trim()).filter(Boolean),
     };
     if (editingId) {
@@ -52,7 +53,7 @@ export default function AdminUnitsPage() {
   function startEdit(unit: any) {
     setForm({
       name: unit.name, description: unit.description ?? "", amenitiesText: (unit.amenities ?? []).join("، "), location_url: unit.location_url ?? "", capacity: unit.capacity,
-      base_hourly_price: unit.base_hourly_price, cleanup_buffer_minutes: unit.cleanup_buffer_minutes,
+      base_hourly_price: unit.base_hourly_price, weekend_hourly_price: unit.weekend_hourly_price ?? "", cleanup_buffer_minutes: unit.cleanup_buffer_minutes,
       hold_minutes: unit.hold_minutes, status: unit.status,
     });
     setEditingId(unit.id);
@@ -86,9 +87,14 @@ export default function AdminUnitsPage() {
                 value={form.capacity} onChange={(e) => setForm({ ...form, capacity: Number(e.target.value) })} />
             </div>
             <div>
-              <label className="text-xs text-neutral-500">سعر الساعة (ريال)</label>
+              <label className="text-xs text-neutral-500">سعر الساعة - أيام الأسبوع (ريال)</label>
               <input type="number" min={0} step="0.01" className="w-full border rounded-lg p-2"
                 value={form.base_hourly_price} onChange={(e) => setForm({ ...form, base_hourly_price: Number(e.target.value) })} />
+            </div>
+            <div>
+              <label className="text-xs text-neutral-500">سعر الساعة - نهاية الأسبوع والإجازات (ريال)</label>
+              <input type="number" min={0} step="0.01" className="w-full border rounded-lg p-2"
+                value={form.weekend_hourly_price} onChange={(e) => setForm({ ...form, weekend_hourly_price: e.target.value === "" ? "" : Number(e.target.value) })} />
             </div>
             <div>
               <label className="text-xs text-neutral-500">فاصل التنظيف (دقيقة)</label>
@@ -127,7 +133,7 @@ export default function AdminUnitsPage() {
               <div>
                 <div className="font-medium">{u.name}</div>
                 <div className="text-sm text-neutral-500">
-                  {u.base_hourly_price} ريال/ساعة · {u.status}
+                  {u.base_hourly_price} ريال/ساعة (نهاية الأسبوع {u.weekend_hourly_price ?? u.base_hourly_price}) · {u.status}
                 </div>
               </div>
               <button onClick={() => startEdit(u)} className="text-sm text-blue-600">تعديل</button>

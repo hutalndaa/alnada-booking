@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireStaff } from "@/lib/authGuard";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { calculatePrice } from "@/lib/pricing";
+import { getHolidays } from "@/lib/holidays";
+import { hourlyFor, riyadhDate } from "@/lib/hours";
 import { hasBlockConflict } from "@/lib/blocks";
 import { isValidName, isValidPhone, cleanPhoneInput } from "@/lib/validation";
 
@@ -55,8 +57,9 @@ export async function POST(req: NextRequest) {
     .from("pricing_tiers")
     .select("min_hours, discount_percent")
     .or(`unit_id.eq.${unit_id},unit_id.is.null`);
+  const dayHourly = hourlyFor(unit.base_hourly_price, unit.weekend_hourly_price, riyadhDate(start), await getHolidays());
   const price = calculatePrice(
-    Number(unit.base_hourly_price),
+    dayHourly,
     hoursNum,
     (tiers ?? []).map((t) => ({ minHours: t.min_hours, discountPercent: t.discount_percent }))
   );
@@ -79,7 +82,7 @@ export async function POST(req: NextRequest) {
       start_time: start.toISOString(),
       end_time: end.toISOString(),
       buffer_minutes: unit.cleanup_buffer_minutes,
-      hourly_price: unit.base_hourly_price,
+      hourly_price: dayHourly,
       discount_percent: price.discountPercent,
       total_price: total,
       status: "confirmed",

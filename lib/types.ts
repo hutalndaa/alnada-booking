@@ -4,6 +4,7 @@ export interface Unit {
   description: string | null;
   capacity: number;
   base_hourly_price: number;
+  weekend_hourly_price: number | null;
   cleanup_buffer_minutes: number;
   hold_minutes: number;
   amenities: string[];

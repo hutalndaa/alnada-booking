@@ -6,6 +6,7 @@ import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import BookingForm from "@/components/BookingForm";
 import Gallery from "@/components/Gallery";
+import { getHolidays } from "@/lib/holidays";
 
 export const revalidate = 0;
 
@@ -24,6 +25,7 @@ export default async function BookUnitPage({ params }: { params: { id: string } 
     .or(`unit_id.eq.${params.id},unit_id.is.null`)
     .order("min_hours");
 
+  const holidays = await getHolidays();
   const u = unit as Unit;
   const tierList = (tiers ?? []).map((t) => ({
     minHours: t.min_hours,
@@ -50,7 +52,12 @@ export default async function BookUnitPage({ params }: { params: { id: string } 
               </div>
               <div className="rounded-xl bg-white border border-stone-200 p-3">
                 <dt className="text-stone-500">سعر الساعة</dt>
-                <dd className="font-bold text-emerald-900">{Number(u.base_hourly_price)} ريال</dd>
+                <dd className="font-bold text-emerald-900">
+                  {Number(u.base_hourly_price)} ريال
+                  {u.weekend_hourly_price && Number(u.weekend_hourly_price) !== Number(u.base_hourly_price) && (
+                    <span className="block text-xs font-normal text-stone-500">{Number(u.weekend_hourly_price)} ريال نهاية الأسبوع والإجازات</span>
+                  )}
+                </dd>
               </div>
             </dl>
             {u.location_url && (
@@ -90,6 +97,8 @@ export default async function BookUnitPage({ params }: { params: { id: string } 
             <BookingForm
               unitId={u.id}
               hourlyPrice={Number(u.base_hourly_price)}
+              weekendPrice={u.weekend_hourly_price ? Number(u.weekend_hourly_price) : null}
+              holidays={holidays}
               capacity={u.capacity}
               bufferMinutes={u.cleanup_buffer_minutes}
               tiers={tierList}
